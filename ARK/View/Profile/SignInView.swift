@@ -25,8 +25,12 @@ struct SignInView: View {
     @State var createAccount: Bool = false
     @State var showError: Bool = false
     @State var errorMessage: String = ""
+    
+    @State private var forgotPassword = false
     @State private var showPassword: Bool = false
-
+    @State private var resetSuccessful = false
+    
+    
     @StateObject private var authViewModel = AuthViewModel()
     
     // User Defaults
@@ -71,7 +75,8 @@ struct SignInView: View {
                 
             }
             Button("Forgot Password", action: {
-                resetPassword()
+                forgotPassword.toggle()
+                //resetPassword()
             })
             .font(.callout)
             .foregroundColor(Color.gray)
@@ -84,7 +89,7 @@ struct SignInView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.right")
-                    Text(LocalizedStringKey("Sign in Button"))
+                    Text(LocalizedStringKey("Sign in"))
                         .customFont(.headline)
                 }
                 .largeButton()
@@ -126,12 +131,16 @@ struct SignInView: View {
         .padding(30)
         .overlay(content: {
             LoadingView(show: $isLoading)
-        }
-        )
+        })
         .background(Color.secondary.opacity(0.3))
         .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: Color("Shadow").opacity(0.3), radius: 5, x: 0, y: 3)
         .shadow(color: Color("Shadow").opacity(0.3), radius: 30, x: 0, y: 30)
+        
+        .popover(isPresented: $forgotPassword) {
+            ForgotPasswordPopover(popOverButton: $forgotPassword)
+        }
+        
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(.linearGradient(colors: [Color.secondary, .white.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -145,6 +154,8 @@ struct SignInView: View {
             //
         }
         .navigationBarBackButtonHidden(true)
+        
+        
     }
     
     func loginUser(){
@@ -174,16 +185,7 @@ struct SignInView: View {
         }
     }
     
-    func resetPassword(){
-        Task{
-            do{
-                try await Auth.auth().sendPasswordReset(withEmail: emailID)
-                print("Email SENT")
-            }catch{
-                await setError(error)
-            }
-        }
-    }
+    
     // Displaying errors with alerts
     func setError(_ error: Error)async{
         await MainActor.run(body: {
@@ -223,7 +225,7 @@ struct RegisterView: View{
     @State var emailID = ""
     @State var password = ""
     
-    @State var isLoading = false
+    @State private var isLoading = false
     @State private var showPassword: Bool = false
     
     @Environment(\.dismiss) var dismiss
@@ -231,7 +233,7 @@ struct RegisterView: View{
     @State var errorMessage: String = ""
     
     @StateObject private var authViewModel = AuthViewModel()
-
+    
     // User Defaults
     @AppStorage ("log_status") var logStatus: Bool = false
     
@@ -308,7 +310,7 @@ struct RegisterView: View{
                         } label: {
                             HStack {
                                 Image(systemName: "arrow.right")
-                                Text(LocalizedStringKey("Sign up Button"))
+                                Text(LocalizedStringKey("Sign up"))
                                     .customFont(.headline)
                             }
                             .largeButton()
@@ -426,48 +428,25 @@ struct RegisterView: View{
     }
 }
 
-struct SignInView_Previews: PreviewProvider {
-    static var previews: some View {
-        SignInView()
-        //            .preferredColorScheme(.dark)
-    }
+#Preview{
+    SignInView()
 }
 
-struct PopoverContent: View {
+struct ForgotPasswordPopover: View {
     
     @Binding var popOverButton: Bool
+    @State private var emailID = ""
     
     var body: some View {
-        ZStack {
-            Color.accentColor.ignoresSafeArea()
-            VStack {
-                Text("Choose The Role That Best Fits You")
-                    .customFont(.title3)
-                    .padding()
-                    .foregroundColor(Color("Golden"))
-                Text("SERVANTS:")
-                    .font(.headline)
-                    .foregroundColor(Color("InverseAccentColor"))
-                    .frame(width: 350, alignment: .leading)
-                Text("If you are a servant in the church You will need verification to access specific features.\n\nTypically verification is given 1-3 days after signing up. If you do not see a verfied symbol on your profile page, please contact our development team through the app.")
-                    .font(.subheadline)
-                    .foregroundColor(Color("InverseAccentColor"))
-                    .frame(width: 350)
-                    .multilineTextAlignment(.leading)
-                
-                Button {
-                    popOverButton.toggle()
-                } label: {
-                    Text(" Done")
-                        .frame(width: 350, height: 50)
-                        .foregroundColor(.accentColor)
-                        .background(Color("Golden"))
-                        .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .padding()
-                }
-                
-                
-            }
+        NavigationView{
+            ForgotPasswordView(emailNotSent: $popOverButton)
+                .toolbar(content: {
+                    Button{
+                        popOverButton.toggle()
+                    } label: {
+                        Text("Cancel")
+                    }
+                })
         }
         
     }

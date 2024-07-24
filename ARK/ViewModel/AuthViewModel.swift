@@ -1,5 +1,5 @@
 //
-//  GoogleSignIn_Logic.swift
+//  AuthViewModel.swift
 //  ARK
 //
 //  Created by Andrew Beshay on 7/24/24.

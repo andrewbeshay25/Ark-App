@@ -8,14 +8,21 @@
 import SwiftUI
 
 struct ContentView: View {
+    @AppStorage ("log_status") var logStatus: Bool = false
+    @StateObject private var authViewModel = AuthViewModel()
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if(logStatus){
+            Text("Welcome")
+            
+            Button{
+                authViewModel.logout()
+            } label: {
+                Text("Log Out")
+            }
+        } else{
+            SignInView()
         }
-        .padding()
     }
 }
 
